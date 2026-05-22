@@ -1,11 +1,9 @@
 package com.movies.task_1;
 
 import java.sql.*;
-import java.util.*;
 
 public class MovieJDBC {
 
-    // URL для H2 в памяти
     private static final String URL = "jdbc:h2:mem:moviedb;DB_CLOSE_DELAY=-1";
     private static final String USER = "sa";
     private static final String PASS = "";
@@ -14,31 +12,20 @@ public class MovieJDBC {
         try (Connection conn = DriverManager.getConnection(URL, USER, PASS)) {
             System.out.println("Подключение успешно!");
 
-            // 1. Удалить таблицу если существует и создать заново
             dropAndCreateTable(conn);
-
-            // 2. Вставить 4 записи
             insertMovies(conn);
-
-            // 3. Обновить одну запись через PreparedStatement
             updateMovie(conn, 1, "Матрица: Перезагрузка", "Фантастика", 2003);
-
-            // 4. Удалить одну запись
             deleteMovie(conn, 2);
 
-            // 5. Вывести все записи
             System.out.println("\n=== Все фильмы ===");
             printAllMovies(conn);
 
-            // 6. Поиск по году
             System.out.println("\n=== Фильмы после 2000 года ===");
             findByYear(conn, 2000);
 
-            // 7. Поиск по жанру
             System.out.println("\n=== Фантастика ===");
             findByGenre(conn, "Фантастика");
 
-            // 8. Поиск по названию
             System.out.println("\n=== Поиск 'начало' ===");
             findByTitle(conn, "начало");
         }
@@ -49,10 +36,10 @@ public class MovieJDBC {
             stmt.execute("DROP TABLE IF EXISTS movies");
             stmt.execute("""
                 CREATE TABLE movies (
-                    id    INT AUTO_INCREMENT PRIMARY KEY,
-                    title VARCHAR(200) NOT NULL,
-                    genre VARCHAR(100),
-                    year  INT
+                    id            INT AUTO_INCREMENT PRIMARY KEY,
+                    title         VARCHAR(200) NOT NULL,
+                    genre         VARCHAR(100),
+                    release_year  INT
                 )
             """);
             System.out.println("Таблица movies создана");
@@ -60,7 +47,7 @@ public class MovieJDBC {
     }
 
     static void insertMovies(Connection conn) throws SQLException {
-        String sql = "INSERT INTO movies (title, genre, year) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO movies (title, genre, release_year) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             Object[][] movies = {
                     {"Матрица", "Фантастика", 1999},
@@ -80,7 +67,7 @@ public class MovieJDBC {
 
     static void updateMovie(Connection conn, int id, String title, String genre, int year)
             throws SQLException {
-        String sql = "UPDATE movies SET title=?, genre=?, year=? WHERE id=?";
+        String sql = "UPDATE movies SET title=?, genre=?, release_year=? WHERE id=?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, title);
             pstmt.setString(2, genre);
@@ -109,34 +96,38 @@ public class MovieJDBC {
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("genre"),
-                        rs.getInt("year"));
+                        rs.getInt("release_year"));
             }
         }
     }
 
     static void findByYear(Connection conn, int minYear) throws SQLException {
-        String sql = "SELECT * FROM movies WHERE year > ? ORDER BY year";
+        String sql = "SELECT * FROM movies WHERE release_year > ? ORDER BY release_year";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, minYear);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     System.out.printf("id=%d | %-30s | %-15s | %d%n",
-                            rs.getInt("id"), rs.getString("title"),
-                            rs.getString("genre"), rs.getInt("year"));
+                            rs.getInt("id"),
+                            rs.getString("title"),
+                            rs.getString("genre"),
+                            rs.getInt("release_year"));
                 }
             }
         }
     }
 
     static void findByGenre(Connection conn, String genre) throws SQLException {
-        String sql = "SELECT * FROM movies WHERE LOWER(genre) = LOWER(?) ORDER BY year";
+        String sql = "SELECT * FROM movies WHERE LOWER(genre) = LOWER(?) ORDER BY release_year";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, genre);
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     System.out.printf("id=%d | %-30s | %-15s | %d%n",
-                            rs.getInt("id"), rs.getString("title"),
-                            rs.getString("genre"), rs.getInt("year"));
+                            rs.getInt("id"),
+                            rs.getString("title"),
+                            rs.getString("genre"),
+                            rs.getInt("release_year"));
                 }
             }
         }
@@ -149,11 +140,12 @@ public class MovieJDBC {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     System.out.printf("id=%d | %-30s | %-15s | %d%n",
-                            rs.getInt("id"), rs.getString("title"),
-                            rs.getString("genre"), rs.getInt("year"));
+                            rs.getInt("id"),
+                            rs.getString("title"),
+                            rs.getString("genre"),
+                            rs.getInt("release_year"));
                 }
             }
         }
     }
 }
-
